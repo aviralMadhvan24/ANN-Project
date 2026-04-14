@@ -1001,69 +1001,64 @@
     </section>
 
     <!-- ═══════════════════════════════════
-         HOW TO EXPLAIN / SPEAKER GUIDE
+         TECH STACK & ARCHITECTURE
     ═══════════════════════════════════ -->
-    <section class="section" id="details" aria-labelledby="details-title">
+    <section class="section" id="tech-stack" aria-labelledby="tech-title">
       <div class="container">
         <div class="section-head reveal">
-          <h2 class="section-title" id="details-title">Presenting the Video</h2>
-          <p class="section-subtitle">A structured speaker guide so you can align your talk to the video timestamps and communicate each idea clearly.</p>
+          <h2 class="section-title" id="tech-title">Core Technologies &amp; Architecture</h2>
+          <p class="section-subtitle">A look under the hood at the robust frameworks and libraries powering this end-to-end machine learning pipeline.</p>
           <div class="divider-line"></div>
         </div>
 
         <div class="split-grid">
           <div class="reveal">
-            <p style="color:var(--muted); margin-bottom:1rem; font-size:0.93rem;">When presenting the project, follow this sequence to tell a coherent story:</p>
+            <p style="color:var(--muted); margin-bottom:1rem; font-size:0.93rem;">The system is built entirely on industry-standard Python data science libraries:</p>
             <div class="detail-list">
               <div class="detail-item">
-                <span class="detail-check">🎯</span>
-                <div><strong>Open with the problem</strong><p>Explain why symptom-based disease prediction matters and what gap the project fills.</p></div>
+                <span class="detail-check">🎨</span>
+                <div><strong>Streamlit &amp; Plotly</strong><p>Provides a highly reactive, component-based dashboard UI with rich, interactive data visualisations.</p></div>
               </div>
               <div class="detail-item">
-                <span class="detail-check">📦</span>
-                <div><strong>Introduce the dataset</strong><p>Describe the 132 diseases, ~130 symptom features, and the binary encoding scheme.</p></div>
+                <span class="detail-check">🐼</span>
+                <div><strong>Pandas &amp; Profiling</strong><p>Handles core tabular data manipulation, advanced cleaning, and automated exploratory data analysis reports.</p></div>
               </div>
               <div class="detail-item">
-                <span class="detail-check">🖥️</span>
-                <div><strong>Demo the dashboard flow</strong><p>Walk through each of the 9 tabs live — let the audience see real visuals updating.</p></div>
+                <span class="detail-check">🤖</span>
+                <div><strong>Scikit-Learn</strong><p>Powers the comprehensive ML backend, including diverse classifiers, scalers, and rigorous cross-validation.</p></div>
               </div>
               <div class="detail-item">
-                <span class="detail-check">📈</span>
-                <div><strong>Show evaluation results</strong><p>Highlight the confusion matrix and the side-by-side model comparison chart.</p></div>
-              </div>
-              <div class="detail-item">
-                <span class="detail-check">🚀</span>
-                <div><strong>Close with future scope</strong><p>Mention deployment (FastAPI/Docker), additional ANN architectures, and clinical integration.</p></div>
+                <span class="detail-check">⚡</span>
+                <div><strong>NumPy &amp; SciPy</strong><p>Underpins the heavy mathematical operations, matrix transformations, and dynamic hyperparameter search spaces.</p></div>
               </div>
             </div>
           </div>
 
           <div class="timing-card reveal" style="transition-delay:0.15s">
-            <h3>🕐 Video Timing Guide</h3>
+            <h3>⚙️ System Delivery Flow</h3>
             <div class="timing-row">
-              <span class="timing-time">0:00 – 0:30</span>
-              <span class="timing-label">Project purpose</span>
-              <div class="timing-bar-wrap"><div class="timing-bar" style="width:15%"></div></div>
+              <span class="timing-time" style="min-width:100px;">1. Ingestion</span>
+              <span class="timing-label">Dynamic CSV schema validation</span>
             </div>
             <div class="timing-row">
-              <span class="timing-time">0:30 – 1:15</span>
-              <span class="timing-label">Dataset &amp; symptoms</span>
-              <div class="timing-bar-wrap"><div class="timing-bar" style="width:30%"></div></div>
+              <span class="timing-time" style="min-width:100px;">2. Preprocess</span>
+              <span class="timing-label">Stateful imputation &amp; feature scaling</span>
             </div>
             <div class="timing-row">
-              <span class="timing-time">1:15 – 2:30</span>
-              <span class="timing-label">Dashboard demo</span>
-              <div class="timing-bar-wrap"><div class="timing-bar" style="width:70%"></div></div>
+              <span class="timing-time" style="min-width:100px;">3. Train</span>
+              <span class="timing-label">Parallelised Stratified K-Fold CV</span>
             </div>
             <div class="timing-row">
-              <span class="timing-time">2:30 – 3:30</span>
-              <span class="timing-label">Model results</span>
-              <div class="timing-bar-wrap"><div class="timing-bar" style="width:50%"></div></div>
+              <span class="timing-time" style="min-width:100px;">4. Optimise</span>
+              <span class="timing-label">Automated Grid &amp; Random searches</span>
             </div>
             <div class="timing-row">
-              <span class="timing-time">3:30 – End</span>
-              <span class="timing-label">Summary &amp; next steps</span>
-              <div class="timing-bar-wrap"><div class="timing-bar" style="width:20%"></div></div>
+              <span class="timing-time" style="min-width:100px;">5. Inference</span>
+              <span class="timing-label">Real-time prediction confidence scoring</span>
+            </div>
+            <div class="timing-row">
+              <span class="timing-time" style="min-width:100px;">6. Export</span>
+              <span class="timing-label">Persistent model state &amp; batch results</span>
             </div>
           </div>
         </div>
