@@ -1,0 +1,101 @@
+Tutorial: How to create Web Application using
+Python and GPTs
+Continuous Assessment 2 (CA-2): SOP
+Course: Machine Learning & ANN (CS-303B)
+Overview
+•Assessment Type:CS-303B Project Exhibition
+•Total Marks:6 Marks
+•Objective:To enable students to translate theoretical knowledge into practical
+AIML web applications.
+Syllabus Coverage
+The project exhibition will cover topics from the following units as per the course cur-
+riculum:
+•Unit 1:Understanding the Basics of ML (Data Pre-processing, KNN, Regression,
+SVM, and Performance Metrics)
+•Unit 2:Feature Engineering, Outlier Detection (Isolation Forest), and Unsuper-
+vised Learning (Clustering, PCA)
+•Unit 3:Ensemble Learning (Random Forest, Stacking), Hyperparameter Tuning,
+and AutoML Frameworks
+Implementation Guidelines
+1.Project Assignment:Students will be assigned their specific project topics 15
+days prior to the scheduled exhibition date.
+2.Team Formation:The assessment will be conducted in teams consisting of2
+studentseach.
+3.Evaluation Process:The exhibition will featurecross-department judgingto
+ensure an objective and diverse evaluation of the implemented AIML solutions.
+Project Resources
+Students are encouraged to utilize the following resources for dataset acquisition and
+reference:
+•Dataset Repository:UCI Machine Learning Repository
+•Indian Open Datasets: India Open Dataset,AIkosh.
+•Tools:Vscode, dataset, github account, streamlit account.
+1
+
+Tutorial
+Step-1 : Open Gemini Google Gemini.
+Step-2 : Enter the following prompt into gemini: create a ML pipeline using streamlit
+dashboard that does the following in sequence The application to show horizontal
+expansion of the steps with more graphically appealing and make use of the best
+esthetics for dashboard 1 Initially the application will ask for the type of problem
+to be solved ClassificationRegression 2 Input Data Input data from UI and ask user
+to select the target feature Show the overall data shape using PCA also allow user
+to select features and see the shape of the data You can also use plotly for this
+2 Exploratory Data Analysis EDA Perform EDA and provide the results on the
+UI 3 Data Engineering and Cleaning Provide options to do data engineering with
+methods like mean median mode and compute outliers using IQR Isolation Forest
+DBSCAN and OPTICS If there are outliers then ask user if he wants to remove them
+Give option to user so that he can delete these data from UI 4 Feature Selection
+Perform feature selection step using methods like variance threshold correlation
+information gain only with target 5 Data Split Split the data into training and
+testing samples 6 Model Selection ask user to select the model from the list linear
+regression SVM with kernel options kmeans random forest 7 Model Training and
+KFold Validation Ask for the value of K before this step 8 Performance Metrics with
+checking for overfitting and underfitting 9 At the end give option to tune hyper
+parameters for the mentioned models and its effect on the model performance using
+gridsearch or randomsearch
+Figure 1: default
+Step-3 : Copy and paste the resultant code in IDE and install any dependecies asked for.
+Save the code with the name pipeline.py Note: only use offline IDE’s like vscode
+2
+
+for this.
+Figure 2: VS Code View
+Step-4 : To execute the code run the following command:
+st re am li t run pipeline . py
+3
+
+Figure 3: VS Code Terminal View
+Step-5 : After the command executes successfully, then the application will automatically
+open’s the webpage in the default browser.
+Figure 4: VS Code Terminal View
+4
+
+Figure 5: Application running inside browser view
+Step-5 : If everything worked fine and you are satisfied with the code working and all the
+features are correctly performing the task. Then open streamlit website and create
+an account by clicking on the top right corner icon with text ”Free”.
+Figure 6: Streamlit Website
+5
+
+Step-6 : Create an account either using Google of Github.
+Figure 7: Streamlit Website: Account creation
+Step-7 : After successful account creation.
+Figure 8: Streamlit Website: App Creation UI
+6
+
+Step-8 : After successful account creation. Click on ”Create app” icon on top right corner
+of the screen.
+Figure 9: Streamlit Website: App Creation UI
+Step-9 : Connect to your Github Account.
+Figure 10: Streamlit Website: App Creation UI
+Step-10 : Upload your application on github and make it public.
+7
+
+Step-11 : Enter the following details from your github repository in the fields as mentioned
+and then click deply. Deployment will give you a url that you can click and test
+your application. For more information on deployment check the documentation.
+After you have understood the working then play with the code and make it more
+robust, so that it can be used as a full web application.
+Happy Coding!!
+8
+
