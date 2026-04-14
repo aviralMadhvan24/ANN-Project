@@ -395,6 +395,7 @@ with tabs[5]:
                     st.session_state['X_test'] = X_test
                     st.session_state['y_train'] = y_train
                     st.session_state['y_test'] = y_test
+                    st.session_state['action_log'].append(f"✂️ Split data into Training ({X_train.shape[0]} rows) and Testing ({X_test.shape[0]} rows).")
                     st.success("Data successfully split!")
                     
                     col1, col2 = st.columns(2)
