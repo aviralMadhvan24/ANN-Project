@@ -1,0 +1,105 @@
+# Project Explanation for PPT
+
+## What is Our Project?
+Our project is called "Automated Machine Learning Pipeline Dashboard". It's a web app that helps people do machine learning without being experts. It guides you step-by-step through the whole process of building a machine learning model.
+
+## Why Did We Build This?
+- Machine learning is powerful but can be confusing for beginners
+- We wanted to make it easy and fun to learn
+- It's for our college mid-semester project on Artificial Neural Networks
+- Shows how data turns into predictions
+
+## Main Features (What the Dashboard Does)
+
+### 9 Steps in the Pipeline:
+1. **Choose Problem Type**: Pick if you want to classify things (like yes/no) or predict numbers (regression)
+2. **Upload Data**: Put in your own data or use our example datasets
+3. **Explore Data (EDA)**: Look at charts and stats to understand your data
+4. **Clean Data**: Fix missing values, handle outliers, encode categories
+5. **Select Features**: Choose the best data columns for your model
+6. **Split Data**: Divide data into training and testing sets
+7. **Pick Models**: Choose from different algorithms like Random Forest, SVM
+8. **Train & Test**: Train the model and see how well it performs
+9. **Tune Parameters**: Improve the model by adjusting settings
+
+### Cool Visual Things:
+- Interactive charts with Plotly
+- Real-time updates as you change settings
+- Beautiful design with tabs and buttons
+- Works on phone and computer
+
+## How to Use It (Simple Steps)
+1. Run: `streamlit run pipeline.py`
+2. Open browser to localhost:8501
+3. Click through the 9 tabs from left to right
+4. Upload data or use examples
+5. Watch the magic happen!
+
+## Technologies We Used
+- **Streamlit**: Makes the web app
+- **Python libraries**: Pandas, Scikit-learn, Plotly, NumPy
+- **For data**: CSV files, sample datasets
+- **Git**: For version control
+
+## Our Datasets
+- **Showcase Classification**: Symptom-based dataset for disease prediction
+- **Showcase Regression**: Symptom severity dataset for disease risk scoring
+- **Training.csv**: Real medical data with symptoms and diseases
+- **PDF Reader**: Tool to extract text from PDFs
+
+## Key Points for PPT Slides
+
+### Slide 1: Title
+- Automated ML Pipeline Dashboard
+- By [Your Names]
+- College Project
+
+### Slide 2: What It Does
+- Step-by-step ML guide
+- From data to model
+- Interactive and visual
+
+### Slide 3: The 9 Steps
+- List them with simple icons or numbers
+- Show screenshots of each tab
+
+### Slide 4: Technologies
+- Python + Streamlit
+- ML libraries
+- Data visualization
+
+### Slide 5: Demo Screenshots
+- Add pictures of:
+  - Main dashboard
+  - A chart
+  - Model results
+
+### Slide 6: Why It's Cool
+- Easy for beginners
+- Shows ML concepts clearly
+- Real-time feedback
+- Educational tool
+
+### Slide 7: Future Plans
+- Add neural networks
+- More features
+- Deploy online
+
+### Slide 8: Thank You
+- Questions?
+- Contact info
+
+## Simple Language Tips for PPT
+- Use big, clear fonts
+- One idea per slide
+- Add colors and simple icons
+- Keep text short
+- Practice explaining out loud
+
+## Files to Include in PPT
+- Screenshots of the dashboard
+- Charts from the app
+- Flow diagram of the 9 steps
+- Your team photo (optional)
+
+This should help you make a great presentation! The project shows how we can make complex things simple.

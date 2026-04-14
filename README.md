@@ -65,8 +65,8 @@ Open your browser to `http://localhost:8501` and start exploring!
 ### Sample Datasets
 
 The project includes two showcase datasets to get you started:
-- **Classification**: Synthetic dataset with outliers and missing values
-- **Regression**: Generated data demonstrating various preprocessing techniques
+- **Classification**: Symptom-based dataset for disease prediction
+- **Regression**: Symptom severity dataset for disease risk scoring
 
 ## Project Structure
 
