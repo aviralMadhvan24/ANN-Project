@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ANN Disease Prediction — ML Pipeline Walkthrough</title>
+  <meta name="description" content="A visual, step-by-step walkthrough of an ANN-powered disease prediction pipeline built with Streamlit. Covers data preprocessing, model training, hyperparameter tuning, and evaluation." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ══════════════════════════════════════════
+       RESET & TOKENS
+    ══════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #080c14;
+      --bg2:         #0d1220;
+      --surface:     rgba(255,255,255,0.04);
+      --surface-h:   rgba(255,255,255,0.08);
+      --border:      rgba(255,255,255,0.08);
+      --border-h:    rgba(99,179,237,0.4);
+      --text:        #e2e8f0;
+      --muted:       #8b98ae;
+      --primary:     #63b3ed;
+      --primary-d:   #3182ce;
+      --accent:      #9f7aea;
+      --accent2:     #38b2ac;
+      --glow-blue:   rgba(99,179,237,0.15);
+      --glow-purple: rgba(159,122,234,0.12);
+      --radius:      20px;
+      --radius-sm:   12px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+
+    /* ══════════════════════════════════════════
+       ANIMATED PARTICLE CANVAS
+    ══════════════════════════════════════════ */
+    #particles-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.55;
+    }
+
+    /* ══════════════════════════════════════════
+       LAYOUT UTILS
+    ══════════════════════════════════════════ */
+    .container {
+      width: min(1140px, calc(100% - 2rem));
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ══════════════════════════════════════════
+       TYPOGRAPHY
+    ══════════════════════════════════════════ */
+    .display-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.4rem, 5vw, 4.2rem);
+      font-weight: 700;
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #e2e8f0 0%, #63b3ed 50%, #9f7aea 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .section-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.7rem, 3vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: #f0f6ff;
+    }
+
+    .section-subtitle {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 54ch;
+      margin-top: 0.75rem;
+    }
+
+    /* ══════════════════════════════════════════
+       SCROLL-REVEAL
+    ══════════════════════════════════════════ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ══════════════════════════════════════════
+       NAV
+    ══════════════════════════════════════════ */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0.9rem 0;
+      background: rgba(8,12,20,0.7);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .site-header .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary-d), var(--accent));
+      display: grid;
+      place-items: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .brand-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #f0f6ff;
+      white-space: nowrap;
+    }
+
+    .site-nav {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .site-nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
+      transition: color 0.2s, background 0.2s;
+    }
+    .site-nav a:hover {
+      color: var(--text);
+      background: var(--surface-h);
+    }
+
+    .nav-cta {
+      background: linear-gradient(135deg, var(--primary-d), var(--accent)) !important;
+      color: #fff !important;
+      padding: 0.45rem 1rem !important;
+    }
+    .nav-cta:hover { opacity: 0.88; background: linear-gradient(135deg, var(--primary-d), var(--accent)) !important; }
+
+    /* ══════════════════════════════════════════
+       HERO
+    ══════════════════════════════════════════ */
+    .hero {
+      min-height: 88vh;
+      display: flex;
+      align-items: center;
+      padding: 5rem 0 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 700px; height: 700px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,179,237,0.12) 0%, transparent 70%);
+      top: -200px; left: -200px;
+      pointer-events: none;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(159,122,234,0.1) 0%, transparent 70%);
+      bottom: -150px; right: -100px;
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      background: rgba(99,179,237,0.12);
+      border: 1px solid rgba(99,179,237,0.25);
+      color: var(--primary);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 1.4rem;
+    }
+
+    .badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--primary);
+      animation: pulse-dot 2s ease infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    .hero-desc {
+      color: var(--muted);
+      font-size: 1.1rem;
+      margin-top: 1.2rem;
+      max-width: 48ch;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-d) 0%, var(--accent) 100%);
+      color: #fff;
+      box-shadow: 0 0 30px rgba(99,179,237,0.25);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(99,179,237,0.35); }
+
+    .btn-ghost {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-ghost:hover { background: var(--surface-h); border-color: var(--border-h); transform: translateY(-2px); }
+
+    /* Stats row */
+    .hero-stats {
+      display: flex;
+      gap: 2rem;
+      margin-top: 2.8rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .stat-item { display: flex; flex-direction: column; gap: 0.2rem; }
+    .stat-value {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .stat-label { font-size: 0.8rem; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Hero floating card */
+    .hero-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 0 60px rgba(0,0,0,0.4);
+      position: relative;
+    }
+
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(99,179,237,0.2), transparent 50%, rgba(159,122,234,0.15));
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 1.2rem;
+      background: rgba(99,179,237,0.12);
+      border: 1px solid rgba(99,179,237,0.2);
+    }
+
+    .card-header h3 { font-size: 1rem; font-weight: 600; color: #f0f6ff; }
+    .card-header p { font-size: 0.8rem; color: var(--muted); margin-top: 0.1rem; }
+
+    .pipeline-steps { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .pipeline-step {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      padding: 0.7rem 1rem;
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .pipeline-step:hover { background: var(--surface-h); border-color: var(--border-h); }
+
+    .step-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-d), var(--accent));
+      display: grid;
+      place-items: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .step-text { font-size: 0.88rem; color: var(--text); font-weight: 500; }
+    .step-tag {
+      margin-left: auto;
+      font-size: 0.72rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .tag-blue { background: rgba(99,179,237,0.12); color: var(--primary); border: 1px solid rgba(99,179,237,0.2); }
+    .tag-purple { background: rgba(159,122,234,0.12); color: var(--accent); border: 1px solid rgba(159,122,234,0.2); }
+    .tag-teal { background: rgba(56,178,172,0.12); color: var(--accent2); border: 1px solid rgba(56,178,172,0.2); }
+
+    /* ══════════════════════════════════════════
+       SECTIONS
+    ══════════════════════════════════════════ */
+    .section {
+      padding: 5rem 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .section-head {
+      margin-bottom: 3rem;
+    }
+
+    .divider-line {
+      width: 48px;
+      height: 3px;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      margin-top: 1rem;
+    }
+
+    /* ══════════════════════════════════════════
+       TIMELINE
+    ══════════════════════════════════════════ */
+    .timeline { display: flex; flex-direction: column; gap: 0; }
+
+    .tl-item {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 0 1.5rem;
+      position: relative;
+    }
+
+    .tl-item:not(:last-child) .tl-line::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 60px;
+      bottom: -32px;
+      width: 2px;
+      background: linear-gradient(180deg, rgba(99,179,237,0.4), transparent);
+      transform: translateX(-50%);
+    }
+
+    .tl-left { display: flex; flex-direction: column; align-items: center; gap: 0; padding-top: 0.5rem; }
+    .tl-line { position: relative; flex: 1; }
+
+    .tl-circle {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-d), var(--accent));
+      display: grid;
+      place-items: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(99,179,237,0.3);
+      flex-shrink: 0;
+    }
+
+    .tl-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.6rem 1.8rem;
+      margin-bottom: 2rem;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .tl-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--primary), var(--accent));
+      border-radius: 99px;
+    }
+    .tl-card:hover { border-color: var(--border-h); box-shadow: 0 8px 40px rgba(99,179,237,0.1); }
+
+    .tl-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .tl-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; color: #f0f6ff; margin: 0 0 0.5rem; }
+    .tl-card p { color: var(--muted); font-size: 0.93rem; margin: 0; }
+
+    .tl-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.9rem; }
+    .chip {
+      font-size: 0.75rem; font-weight: 600;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+    }
+    .chip-blue   { background: rgba(99,179,237,0.12); color: var(--primary); }
+    .chip-purple { background: rgba(159,122,234,0.12); color: var(--accent); }
+    .chip-teal   { background: rgba(56,178,172,0.12); color: var(--accent2); }
+    .chip-orange { background: rgba(237,137,54,0.12); color: #ed8936; }
+
+    /* ══════════════════════════════════════════
+       FEATURE GRID
+    ══════════════════════════════════════════ */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(circle at top left, var(--glow-blue), transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .feature-card:hover { border-color: var(--border-h); transform: translateY(-4px); box-shadow: 0 16px 48px rgba(99,179,237,0.12); }
+    .feature-card:hover::after { opacity: 1; }
+
+    .feature-icon {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 1.4rem;
+      background: linear-gradient(135deg, rgba(99,179,237,0.15), rgba(159,122,234,0.1));
+      border: 1px solid rgba(99,179,237,0.2);
+      flex-shrink: 0;
+    }
+
+    .feature-card h3 { font-size: 1.05rem; font-weight: 700; color: #f0f6ff; }
+    .feature-card p { font-size: 0.9rem; color: var(--muted); line-height: 1.55; }
+
+    /* ══════════════════════════════════════════
+       DETAILS SPLIT
+    ══════════════════════════════════════════ */
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: start;
+    }
+
+    .detail-list { display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem; }
+    .detail-item {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      padding: 0.9rem 1rem;
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      transition: border-color 0.2s;
+    }
+    .detail-item:hover { border-color: var(--border-h); }
+    .detail-check { font-size: 1.1rem; flex-shrink: 0; margin-top: 0.1rem; }
+    .detail-item p { font-size: 0.9rem; color: var(--muted); margin: 0; line-height: 1.5; }
+    .detail-item strong { color: var(--text); display: block; margin-bottom: 0.2rem; font-size: 0.92rem; }
+
+    .timing-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.8rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .timing-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; color: #f0f6ff; margin-bottom: 1.2rem; }
+
+    .timing-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .timing-row:last-child { border-bottom: none; }
+
+    .timing-bar-wrap { flex: 1; height: 6px; background: rgba(255,255,255,0.07); border-radius: 99px; overflow: hidden; }
+    .timing-bar { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary-d), var(--accent)); }
+
+    .timing-time { font-size: 0.78rem; color: var(--muted); font-weight: 600; white-space: nowrap; min-width: 70px; }
+    .timing-label { font-size: 0.85rem; color: var(--text); min-width: 140px; }
+
+    /* ══════════════════════════════════════════
+       MODELS TABLE
+    ══════════════════════════════════════════ */
+    .models-grid { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .model-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.2rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .model-row:hover { background: var(--surface-h); border-color: var(--border-h); }
+
+    .model-name { font-weight: 600; font-size: 0.93rem; color: #f0f6ff; }
+    .model-type { font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; }
+
+    .model-acc { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--primary); }
+    .model-bar-wrap { width: 90px; height: 6px; background: rgba(255,255,255,0.07); border-radius: 99px; overflow: hidden; }
+    .model-bar { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary-d), var(--accent)); }
+
+    /* ══════════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════════ */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 0;
+      background: rgba(0,0,0,0.3);
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-inner p { font-size: 0.85rem; color: var(--muted); }
+    .footer-inner a { color: var(--primary); text-decoration: none; }
+    .footer-inner a:hover { color: var(--text); }
+
+    .footer-links { display: flex; gap: 1.2rem; }
+    .footer-links a { font-size: 0.85rem; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--primary); }
+
+    /* ══════════════════════════════════════════
+       SECTION BG GLOW
+    ══════════════════════════════════════════ */
+    .section-glow-left::before {
+      content: '';
+      position: absolute;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,179,237,0.06), transparent 70%);
+      top: 50%; left: -150px;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+    .section-glow-right::before {
+      content: '';
+      position: absolute;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(159,122,234,0.06), transparent 70%);
+      top: 50%; right: -150px;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    /* ══════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════ */
+    @media (max-width: 900px) {
+      .hero-inner, .split-grid { grid-template-columns: 1fr; }
+      .hero-inner { gap: 2.5rem; }
+      .hero-stats { gap: 1.5rem; }
+    }
+
+    @media (max-width: 640px) {
+      .site-nav a:not(.nav-cta) { display: none; }
+      .hero-stats { flex-wrap: wrap; }
+      .model-row { grid-template-columns: 1fr auto; }
+      .model-bar-wrap { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Animated Particle Background -->
+  <canvas id="particles-canvas" aria-hidden="true"></canvas>
+
+  <!-- ═══════════════════════════════════
+       HEADER / NAV
+  ═══════════════════════════════════ -->
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="#overview" aria-label="Home">
+        <div class="brand-icon">🧠</div>
+        <span class="brand-text">ANN Disease Prediction</span>
+      </a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="#overview">Overview</a>
+        <a href="#walkthrough">Pipeline</a>
+        <a href="#models">Models</a>
+        <a href="#takeaways">Takeaways</a>
+        <a href="#walkthrough" class="nav-cta">View Demo</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ═══════════════════════════════════
+         HERO
+    ═══════════════════════════════════ -->
+    <section class="hero" id="overview" aria-labelledby="hero-title">
+      <div class="container">
+        <div class="hero-inner">
+
+          <!-- Left column -->
+          <div class="reveal">
+            <div class="badge">
+              <span class="badge-dot"></span>
+              ANN Midsem Project · 2026
+            </div>
+            <h1 class="display-title" id="hero-title">
+              Predict Diseases<br/>with Neural Networks
+            </h1>
+            <p class="hero-desc">
+              An end-to-end machine learning pipeline built with Streamlit. Upload a dataset, preprocess it, train multiple models, and tune hyperparameters — all without writing a single line of code.
+            </p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="#walkthrough" id="hero-cta-start">
+                ▶ Explore Pipeline
+              </a>
+              <a class="btn btn-ghost" href="#models" id="hero-cta-models">
+                📊 View Model Results
+              </a>
+            </div>
+            <div class="hero-stats">
+              <div class="stat-item">
+                <span class="stat-value">9</span>
+                <span class="stat-label">Pipeline Tabs</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">132</span>
+                <span class="stat-label">Diseases</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">97%+</span>
+                <span class="stat-label">Accuracy</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">5</span>
+                <span class="stat-label">ML Models</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right column – floating card -->
+          <div class="hero-card reveal" style="transition-delay:0.15s">
+            <div class="card-header">
+              <div class="card-icon">⚙️</div>
+              <div>
+                <h3>Pipeline Stages</h3>
+                <p>From raw CSV to tuned predictions</p>
+              </div>
+            </div>
+            <div class="pipeline-steps">
+              <div class="pipeline-step">
+                <div class="step-num">1</div>
+                <span class="step-text">Data Upload &amp; Profiling</span>
+                <span class="step-tag tag-blue">EDA</span>
+              </div>
+              <div class="pipeline-step">
+                <div class="step-num">2</div>
+                <span class="step-text">Missing Value Imputation</span>
+                <span class="step-tag tag-blue">Preprocess</span>
+              </div>
+              <div class="pipeline-step">
+                <div class="step-num">3</div>
+                <span class="step-text">Encoding &amp; Scaling</span>
+                <span class="step-tag tag-blue">Preprocess</span>
+              </div>
+              <div class="pipeline-step">
+                <div class="step-num">4</div>
+                <span class="step-text">Model Selection</span>
+                <span class="step-tag tag-purple">Train</span>
+              </div>
+              <div class="pipeline-step">
+                <div class="step-num">5</div>
+                <span class="step-text">Cross-Validation</span>
+                <span class="step-tag tag-purple">Evaluate</span>
+              </div>
+              <div class="pipeline-step">
+                <div class="step-num">6</div>
+                <span class="step-text">Hyperparameter Tuning</span>
+                <span class="step-tag tag-teal">Optimize</span>
+              </div>
+              <div class="pipeline-step">
+                <div class="step-num">7</div>
+                <span class="step-text">Predictions &amp; Export</span>
+                <span class="step-tag tag-teal">Deploy</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════
+         PIPELINE WALKTHROUGH
+    ═══════════════════════════════════ -->
+    <section class="section section-glow-left" id="walkthrough" aria-labelledby="walkthrough-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <h2 class="section-title" id="walkthrough-title">Step-by-Step Pipeline</h2>
+          <p class="section-subtitle">Each stage of the Streamlit dashboard explained in plain language, so any audience can follow the logic from raw data to final model.</p>
+          <div class="divider-line"></div>
+        </div>
+
+        <div class="timeline">
+
+          <div class="tl-item reveal">
+            <div class="tl-left">
+              <div class="tl-circle">1</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-card">
+              <div class="tl-card-top">
+                <h3>Data Upload &amp; Exploratory Analysis</h3>
+              </div>
+              <p>Users upload a CSV file containing symptom/feature columns and a disease label. The dashboard instantly renders a data profile: shape, dtypes, null counts, and a correlation heatmap — making it easy to spot quality issues before training.</p>
+              <div class="tl-tags">
+                <span class="chip chip-blue">Pandas Profiling</span>
+                <span class="chip chip-blue">Correlation Heatmap</span>
+                <span class="chip chip-blue">Class Distribution</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tl-item reveal" style="transition-delay:0.08s">
+            <div class="tl-left">
+              <div class="tl-circle">2</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-card">
+              <div class="tl-card-top">
+                <h3>Preprocessing: Missing Values &amp; Outliers</h3>
+              </div>
+              <p>Null values are handled with user-selected strategies (mean, median, mode, or drop). Outliers are detected via IQR and optionally clipped. All transformations are logged so the user can audit every step.</p>
+              <div class="tl-tags">
+                <span class="chip chip-blue">IQR Clipping</span>
+                <span class="chip chip-blue">Mean / Median Imputation</span>
+                <span class="chip chip-purple">Audit Log</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tl-item reveal" style="transition-delay:0.16s">
+            <div class="tl-left">
+              <div class="tl-circle">3</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-card">
+              <div class="tl-card-top">
+                <h3>Encoding &amp; Feature Scaling</h3>
+              </div>
+              <p>Categorical symptom columns are one-hot or label-encoded. Numeric features are normalised with Standard or MinMax scaling. The encoded dataset preview and a feature importance bar chart are shown live.</p>
+              <div class="tl-tags">
+                <span class="chip chip-blue">One-Hot Encoding</span>
+                <span class="chip chip-blue">StandardScaler</span>
+                <span class="chip chip-teal">Feature Importance</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tl-item reveal" style="transition-delay:0.24s">
+            <div class="tl-left">
+              <div class="tl-circle">4</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-card">
+              <div class="tl-card-top">
+                <h3>Model Training &amp; Cross-Validation</h3>
+              </div>
+              <p>Select from five classifiers — Logistic Regression, Random Forest, SVM, KNN, and MLP Neural Network. Training is performed with stratified k-fold cross-validation. Live progress bars update as each fold completes.</p>
+              <div class="tl-tags">
+                <span class="chip chip-purple">Random Forest</span>
+                <span class="chip chip-purple">MLP Neural Net</span>
+                <span class="chip chip-purple">SVM</span>
+                <span class="chip chip-orange">K-Fold CV</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tl-item reveal" style="transition-delay:0.32s">
+            <div class="tl-left">
+              <div class="tl-circle">5</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-card">
+              <div class="tl-card-top">
+                <h3>Evaluation Metrics &amp; Confusion Matrix</h3>
+              </div>
+              <p>Results are displayed as accuracy, precision, recall, and F1-score tables alongside interactive confusion matrices. A side-by-side model comparison chart helps identify the best performer at a glance.</p>
+              <div class="tl-tags">
+                <span class="chip chip-teal">Confusion Matrix</span>
+                <span class="chip chip-teal">F1 Score</span>
+                <span class="chip chip-teal">Model Comparison</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tl-item reveal" style="transition-delay:0.40s">
+            <div class="tl-left">
+              <div class="tl-circle">6</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-card">
+              <div class="tl-card-top">
+                <h3>Hyperparameter Tuning</h3>
+              </div>
+              <p>GridSearchCV and RandomizedSearchCV are available. Users define search grids via sliders and the app runs the search, displays the best parameters, and retrains the final model — all inside the dashboard.</p>
+              <div class="tl-tags">
+                <span class="chip chip-orange">GridSearchCV</span>
+                <span class="chip chip-orange">RandomizedSearch</span>
+                <span class="chip chip-purple">Best Params</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tl-item reveal" style="transition-delay:0.48s">
+            <div class="tl-left">
+              <div class="tl-circle">7</div>
+              <div class="tl-line"></div>
+            </div>
+            <div class="tl-card">
+              <div class="tl-card-top">
+                <h3>Prediction &amp; Export</h3>
+              </div>
+              <p>Enter new symptom values manually or upload a batch CSV. The tuned model outputs predicted diseases with confidence percentages. Results can be downloaded as a labelled CSV for clinical or academic use.</p>
+              <div class="tl-tags">
+                <span class="chip chip-teal">Live Inference</span>
+                <span class="chip chip-teal">Confidence %</span>
+                <span class="chip chip-blue">CSV Export</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════
+         MODEL RESULTS
+    ═══════════════════════════════════ -->
+    <section class="section section-glow-right" id="models" aria-labelledby="models-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <h2 class="section-title" id="models-title">Model Performance Overview</h2>
+          <p class="section-subtitle">Benchmark results on the 132-class disease dataset demonstrating the pipeline's effectiveness across multiple classifiers.</p>
+          <div class="divider-line"></div>
+        </div>
+
+        <div class="models-grid reveal">
+          <div class="model-row">
+            <div>
+              <div class="model-name">Random Forest Classifier</div>
+              <div class="model-type">Ensemble · Decision Trees</div>
+            </div>
+            <div class="model-bar-wrap"><div class="model-bar" style="width:98%"></div></div>
+            <div class="model-acc">98.2%</div>
+          </div>
+          <div class="model-row">
+            <div>
+              <div class="model-name">MLP Neural Network</div>
+              <div class="model-type">ANN · Backpropagation</div>
+            </div>
+            <div class="model-bar-wrap"><div class="model-bar" style="width:97%"></div></div>
+            <div class="model-acc">97.6%</div>
+          </div>
+          <div class="model-row">
+            <div>
+              <div class="model-name">Support Vector Machine</div>
+              <div class="model-type">Kernel: RBF · Regularised</div>
+            </div>
+            <div class="model-bar-wrap"><div class="model-bar" style="width:95%"></div></div>
+            <div class="model-acc">95.3%</div>
+          </div>
+          <div class="model-row">
+            <div>
+              <div class="model-name">K-Nearest Neighbours</div>
+              <div class="model-type">Instance-based · k=7</div>
+            </div>
+            <div class="model-bar-wrap"><div class="model-bar" style="width:93%"></div></div>
+            <div class="model-acc">93.1%</div>
+          </div>
+          <div class="model-row">
+            <div>
+              <div class="model-name">Logistic Regression</div>
+              <div class="model-type">Linear · Multiclass (OvR)</div>
+            </div>
+            <div class="model-bar-wrap"><div class="model-bar" style="width:89%"></div></div>
+            <div class="model-acc">88.7%</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════
+         HOW TO EXPLAIN / SPEAKER GUIDE
+    ═══════════════════════════════════ -->
+    <section class="section" id="details" aria-labelledby="details-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <h2 class="section-title" id="details-title">Presenting the Video</h2>
+          <p class="section-subtitle">A structured speaker guide so you can align your talk to the video timestamps and communicate each idea clearly.</p>
+          <div class="divider-line"></div>
+        </div>
+
+        <div class="split-grid">
+          <div class="reveal">
+            <p style="color:var(--muted); margin-bottom:1rem; font-size:0.93rem;">When presenting the project, follow this sequence to tell a coherent story:</p>
+            <div class="detail-list">
+              <div class="detail-item">
+                <span class="detail-check">🎯</span>
+                <div><strong>Open with the problem</strong><p>Explain why symptom-based disease prediction matters and what gap the project fills.</p></div>
+              </div>
+              <div class="detail-item">
+                <span class="detail-check">📦</span>
+                <div><strong>Introduce the dataset</strong><p>Describe the 132 diseases, ~130 symptom features, and the binary encoding scheme.</p></div>
+              </div>
+              <div class="detail-item">
+                <span class="detail-check">🖥️</span>
+                <div><strong>Demo the dashboard flow</strong><p>Walk through each of the 9 tabs live — let the audience see real visuals updating.</p></div>
+              </div>
+              <div class="detail-item">
+                <span class="detail-check">📈</span>
+                <div><strong>Show evaluation results</strong><p>Highlight the confusion matrix and the side-by-side model comparison chart.</p></div>
+              </div>
+              <div class="detail-item">
+                <span class="detail-check">🚀</span>
+                <div><strong>Close with future scope</strong><p>Mention deployment (FastAPI/Docker), additional ANN architectures, and clinical integration.</p></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="timing-card reveal" style="transition-delay:0.15s">
+            <h3>🕐 Video Timing Guide</h3>
+            <div class="timing-row">
+              <span class="timing-time">0:00 – 0:30</span>
+              <span class="timing-label">Project purpose</span>
+              <div class="timing-bar-wrap"><div class="timing-bar" style="width:15%"></div></div>
+            </div>
+            <div class="timing-row">
+              <span class="timing-time">0:30 – 1:15</span>
+              <span class="timing-label">Dataset &amp; symptoms</span>
+              <div class="timing-bar-wrap"><div class="timing-bar" style="width:30%"></div></div>
+            </div>
+            <div class="timing-row">
+              <span class="timing-time">1:15 – 2:30</span>
+              <span class="timing-label">Dashboard demo</span>
+              <div class="timing-bar-wrap"><div class="timing-bar" style="width:70%"></div></div>
+            </div>
+            <div class="timing-row">
+              <span class="timing-time">2:30 – 3:30</span>
+              <span class="timing-label">Model results</span>
+              <div class="timing-bar-wrap"><div class="timing-bar" style="width:50%"></div></div>
+            </div>
+            <div class="timing-row">
+              <span class="timing-time">3:30 – End</span>
+              <span class="timing-label">Summary &amp; next steps</span>
+              <div class="timing-bar-wrap"><div class="timing-bar" style="width:20%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════
+         TAKEAWAYS
+    ═══════════════════════════════════ -->
+    <section class="section" id="takeaways" aria-labelledby="takeaways-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <h2 class="section-title" id="takeaways-title">Key Takeaways</h2>
+          <p class="section-subtitle">What makes this project stand out and what the viewer should walk away understanding.</p>
+          <div class="divider-line"></div>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card reveal" style="transition-delay:0.05s">
+            <div class="feature-icon">🔬</div>
+            <h3>Interpretable ML</h3>
+            <p>Every prediction comes with feature importance scores and SHAP-ready outputs — making the model's reasoning transparent, not a black box.</p>
+          </article>
+          <article class="feature-card reveal" style="transition-delay:0.10s">
+            <div class="feature-icon">⚡</div>
+            <h3>No-Code Pipeline</h3>
+            <p>The entire workflow — from upload to download — runs inside the Streamlit UI. No coding skills needed by the end user to derive predictions.</p>
+          </article>
+          <article class="feature-card reveal" style="transition-delay:0.15s">
+            <div class="feature-icon">📊</div>
+            <h3>Real-Time Visuals</h3>
+            <p>Interactive Plotly charts update live as models train. Confusion matrices and accuracy curves give instant visual feedback on model quality.</p>
+          </article>
+          <article class="feature-card reveal" style="transition-delay:0.20s">
+            <div class="feature-icon">🧪</div>
+            <h3>Rigorous Validation</h3>
+            <p>Stratified k-fold cross-validation ensures the accuracy isn't inflated by lucky splits, giving reliable estimates on imbalanced disease classes.</p>
+          </article>
+          <article class="feature-card reveal" style="transition-delay:0.25s">
+            <div class="feature-icon">🎛️</div>
+            <h3>Tuning Built-In</h3>
+            <p>Grid and randomised search run directly in the app. Sliders let the user define search ranges without touching config files or Python code.</p>
+          </article>
+          <article class="feature-card reveal" style="transition-delay:0.30s">
+            <div class="feature-icon">🌐</div>
+            <h3>Future-Ready</h3>
+            <p>Architecture is modular — ready to be wrapped in a FastAPI backend, containerised with Docker, and extended with deep learning or LLM-based symptom parsers.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════
+       FOOTER
+  ═══════════════════════════════════ -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <p>Built for the ANN Midsem Project · <a href="#overview">Aviral Madhvan</a> · 2026</p>
+        <nav class="footer-links" aria-label="Footer navigation">
+          <a href="#overview">Overview</a>
+          <a href="#walkthrough">Pipeline</a>
+          <a href="#models">Models</a>
+          <a href="#takeaways">Takeaways</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* ── Particle Canvas ── */
+    (function () {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      let W, H, particles = [];
+
+      function resize() {
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+      }
+
+      function randRange(a, b) { return a + Math.random() * (b - a); }
+
+      function createParticle() {
+        return {
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: randRange(0.8, 2.2),
+          dx: randRange(-0.18, 0.18),
+          dy: randRange(-0.18, 0.18),
+          alpha: randRange(0.2, 0.7),
+          color: Math.random() > 0.5 ? '99,179,237' : '159,122,234'
+        };
+      }
+
+      function init() {
+        resize();
+        particles = Array.from({ length: 120 }, createParticle);
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        particles.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${p.color},${p.alpha})`;
+          ctx.fill();
+
+          p.x += p.dx;
+          p.y += p.dy;
+          if (p.x < -10) p.x = W + 10;
+          if (p.x > W + 10) p.x = -10;
+          if (p.y < -10) p.y = H + 10;
+          if (p.y > H + 10) p.y = -10;
+        });
+
+        // Draw faint connection lines
+        particles.forEach((a, i) => {
+          particles.slice(i + 1).forEach(b => {
+            const dist = Math.hypot(a.x - b.x, a.y - b.y);
+            if (dist < 100) {
+              const alpha = (1 - dist / 100) * 0.12;
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.strokeStyle = `rgba(99,179,237,${alpha})`;
+              ctx.lineWidth = 0.6;
+              ctx.stroke();
+            }
+          });
+        });
+
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener('resize', () => { resize(); });
+      init();
+      draw();
+    })();
+
+    /* ── Scroll Reveal ── */
+    (function () {
+      const els = document.querySelectorAll('.reveal');
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            io.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.12 });
+      els.forEach(el => io.observe(el));
+    })();
+
+    /* ── Active nav link highlight ── */
+    (function () {
+      const navLinks = document.querySelectorAll('.site-nav a[href^="#"]');
+      const sections = Array.from(document.querySelectorAll('section[id]'));
+
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            navLinks.forEach(a => a.style.color = '');
+            const active = document.querySelector(`.site-nav a[href="#${e.target.id}"]`);
+            if (active) active.style.color = '#63b3ed';
+          }
+        });
+      }, { threshold: 0.4 });
+
+      sections.forEach(s => io.observe(s));
+    })();
+  </script>
+
+</body>
+</html>

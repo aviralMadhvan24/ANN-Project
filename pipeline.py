@@ -18,7 +18,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # ----------------- PAGE CONFIG AND AESTHETICS -----------------
-st.set_page_config(page_title="Advanced ML Pipeline Dashboard", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Advanced ML Pipeline Dashboard", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
 <style>
@@ -77,6 +77,8 @@ if 'y_test' not in st.session_state:
     st.session_state['y_test'] = None
 if 'selected_features' not in st.session_state:
     st.session_state['selected_features'] = []
+if 'action_log' not in st.session_state:
+    st.session_state['action_log'] = ["✅ Pipeline initialized."]
 
 # ----------------- TABS -----------------
 tabs = st.tabs([
@@ -90,6 +92,28 @@ tabs = st.tabs([
     "8️⃣ Training & Validation", 
     "9️⃣ Tuning"
 ])
+
+# ----------------- SIDEBAR LOG -----------------
+with st.sidebar:
+    st.header("📋 Pipeline Activity Log")
+    if st.session_state.get('df') is not None and st.session_state.get('raw_df') is not None:
+        st.markdown(f"**Original Data Shape:** `{st.session_state['raw_df'].shape}`")
+        st.markdown(f"**Current Data Shape:** `{st.session_state['df'].shape}`")
+        if st.session_state.get('target_feature'):
+            st.markdown(f"**Target Feature:** `{st.session_state['target_feature']}`")
+        
+        csv = st.session_state['df'].to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="⬇️ Download Current Data State",
+            data=csv,
+            file_name='pipeline_data_state.csv',
+            mime='text/csv',
+        )
+        st.markdown("---")
+    
+    st.subheader("Action History")
+    for log in reversed(st.session_state['action_log']):
+        st.markdown(f"- {log}")
 
 # ----------------- STEP 1: Problem Definition -----------------
 with tabs[0]:
@@ -209,6 +233,7 @@ with tabs[3]:
                     elif impute_method == "Mode":
                         df_clean[col].fillna(df_clean[col].mode()[0], inplace=True)
                 st.session_state['df'] = df_clean
+                st.session_state['action_log'].append(f"🔧 Imputed missing values in {len(missing_cols)} columns using **{impute_method}**")
                 st.success("Missing values imputed.")
                 st.rerun()
         else:
@@ -255,10 +280,23 @@ with tabs[3]:
                 full_outliers = st.session_state['outliers_mask']
                 if full_outliers.sum() > 0:
                     st.write(f"Currently tracking **{full_outliers.sum()}** outliers.")
+                    
+                    if len(num_clean_df.columns) >= 2:
+                        pca = PCA(n_components=2)
+                        components = pca.fit_transform(StandardScaler().fit_transform(num_clean_df))
+                        pca_df = pd.DataFrame(components, columns=['PC1', 'PC2'])
+                        pca_df['Outlier'] = full_outliers.loc[num_clean_df.index].values
+                        
+                        fig = px.scatter(pca_df, x='PC1', y='PC2', color='Outlier',
+                                       color_discrete_map={True: 'red', False: 'blue'},
+                                       title="Outliers Highlighted in 2D Space (PCA)")
+                        st.plotly_chart(fig, width='stretch')
+
                     if st.button("Delete Detected Outliers"):
                         df_no_outliers = df_clean[~full_outliers].reset_index(drop=True)
                         st.session_state['df'] = df_no_outliers
                         st.session_state['outliers_mask'] = None
+                        st.session_state['action_log'].append(f"🗑️ Removed **{full_outliers.sum()}** outliers.")
                         st.success(f"Removed {full_outliers.sum()} outliers.")
                         st.rerun()
                 elif st.session_state['outliers_mask'].sum() == 0 and detect_outliers:
@@ -324,6 +362,7 @@ with tabs[4]:
                 selected = st.multiselect("Final Features to Keep", X.columns.tolist(), default=X.columns.tolist())
                 if st.button("Update Selected Features"):
                     st.session_state['selected_features'] = selected
+                    st.session_state['action_log'].append(f"✨ Selected **{len(selected)}** features for training.")
                     st.success(f"Updated! Using {len(selected)} features.")
             else:
                 st.warning("Requires numeric features without NaNs to run automated feature selection.")
