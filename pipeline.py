@@ -223,7 +223,8 @@ with tabs[2]:
                 st.plotly_chart(fig_target, width='stretch')
                 
             st.subheader("Feature vs Target Relationship")
-            num_cols_only = df.select_dtypes(include=[np.number]).columns.tolist()
+            # Filter out target column to prevent internal DuplicateError in Plotly
+            num_cols_only = [col for col in df.select_dtypes(include=[np.number]).columns.tolist() if col != target_col]
             if num_cols_only:
                 selected_dist_feature = st.selectbox("Select a feature to see its distribution relative to the Target:", num_cols_only)
                 if st.session_state['problem_type'] == 'Classification':
