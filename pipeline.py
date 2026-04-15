@@ -11,7 +11,7 @@ from sklearn.feature_selection import VarianceThreshold, mutual_info_classif, mu
 from sklearn.model_selection import train_test_split, KFold, cross_val_score, GridSearchCV, RandomizedSearchCV
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.svm import SVC, SVR
-from sklearn.metrics import accuracy_score, f1_score, mean_squared_error, r2_score
+from sklearn.metrics import accuracy_score, f1_score, mean_squared_error, r2_score, confusion_matrix
 import scipy.stats as stats
 import warnings
 
@@ -90,7 +90,8 @@ tabs = st.tabs([
     "6️⃣ Data Split", 
     "7️⃣ Model Selection", 
     "8️⃣ Training & Validation", 
-    "9️⃣ Tuning"
+    "9️⃣ Tuning",
+    "🔟 Prediction"
 ])
 
 # ----------------- SIDEBAR LOG -----------------
@@ -208,6 +209,28 @@ with tabs[2]:
             st.plotly_chart(fig, width='stretch')
         else:
             st.warning("Not enough numerical columns to generate correlation heatmap.")
+            
+        if st.session_state.get('target_feature') and st.session_state['target_feature'] in df.columns:
+            target_col = st.session_state['target_feature']
+            st.markdown("---")
+            st.subheader(f"Target Distribution: `{target_col}`")
+            
+            if st.session_state['problem_type'] == 'Classification':
+                fig_target = px.histogram(df, x=target_col, color=target_col, title="Target Class Distribution")
+                st.plotly_chart(fig_target, width='stretch')
+            else:
+                fig_target = px.histogram(df, x=target_col, title="Target Value Distribution", marginal="box")
+                st.plotly_chart(fig_target, width='stretch')
+                
+            st.subheader("Feature vs Target Relationship")
+            num_cols_only = df.select_dtypes(include=[np.number]).columns.tolist()
+            if num_cols_only:
+                selected_dist_feature = st.selectbox("Select a feature to see its distribution relative to the Target:", num_cols_only)
+                if st.session_state['problem_type'] == 'Classification':
+                    fig_dist = px.box(df, x=target_col, y=selected_dist_feature, color=target_col, title=f"Distribution of {selected_dist_feature} by {target_col}")
+                else:
+                    fig_dist = px.scatter(df, x=selected_dist_feature, y=target_col, trendline="ols", title=f"{target_col} vs {selected_dist_feature}")
+                st.plotly_chart(fig_dist, width='stretch')
     else:
         st.info("Please upload data in Step 2.")
 
@@ -451,9 +474,11 @@ with tabs[7]:
                  le.fit(pd.concat([y_train, y_test]))
                  y_train_encoded = le.transform(y_train)
                  y_test_encoded = le.transform(y_test)
+                 st.session_state['target_encoder'] = le
             else:
                  y_train_encoded = y_train
                  y_test_encoded = y_test
+                 st.session_state['target_encoder'] = None
 
             model = None
             if model_name == "Logistic Regression": model = LogisticRegression()
@@ -503,6 +528,12 @@ with tabs[7]:
                                  else:
                                      st.success("✅ Model generalized well!")
                                      
+                                 st.subheader("Confusion Matrix")
+                                 cm = confusion_matrix(y_test_encoded, test_preds)
+                                 fig_cm = px.imshow(cm, text_auto=True, color_continuous_scale="Blues", title="Test Data Confusion Matrix",
+                                                    labels=dict(x="Predicted", y="Actual", color="Count"))
+                                 st.plotly_chart(fig_cm, width='stretch')
+                                     
                              else:
                                  train_rmse = np.sqrt(mean_squared_error(y_train_encoded, train_preds))
                                  test_rmse = np.sqrt(mean_squared_error(y_test_encoded, test_preds))
@@ -520,6 +551,13 @@ with tabs[7]:
                                      st.error("📉 High chance of UNDERFITTING (Low R2 Score)")
                                  else:
                                      st.success("✅ Model generalized well!")
+                                     
+                                 st.subheader("Actual vs Predicted")
+                                 fig_reg = px.scatter(x=y_test_encoded, y=test_preds, labels={'x': 'Actual', 'y': 'Predicted'}, title="Actual vs Predicted on Test Data")
+                                 if len(y_test_encoded) > 0:
+                                     min_val, max_val = min(y_test_encoded), max(y_test_encoded)
+                                     fig_reg.add_shape(type="line", line=dict(dash='dash', color='red'), x0=min_val, y0=min_val, x1=max_val, y1=max_val)
+                                 st.plotly_chart(fig_reg, width='stretch')
                         except Exception as e:
                              st.error(f"Training failed: {e}")
                     else:
@@ -587,6 +625,50 @@ with tabs[8]:
              st.write("No default hyperparameters to tune for this model selection.")
     else:
         st.info("Please train a model in Step 8 first.")
+
+# ----------------- STEP 10: Prediction -----------------
+with tabs[9]:
+    st.header("Step 10: Prediction (Disease/Outcome)")
+    if 'model_instance' in st.session_state and st.session_state['X_train'] is not None:
+        st.markdown(f"**Trained Model:** {st.session_state.get('selected_model_name', 'Unknown')}")
+        st.markdown("Enter feature values to predict the outcome for a new instance:")
+        
+        input_data = {}
+        # Create columns for better layout of input fields
+        num_cols = 3
+        cols = st.columns(num_cols)
+        
+        for idx, feature in enumerate(st.session_state['X_train'].columns):
+            col = cols[idx % num_cols]
+            # Try to grab the median or mean from the original data if available
+            default_val = 0.0
+            if st.session_state['df'] is not None and feature in st.session_state['df'].columns:
+                 if pd.api.types.is_numeric_dtype(st.session_state['df'][feature]):
+                     default_val = float(st.session_state['df'][feature].median())
+                     
+            with col:
+                 input_data[feature] = st.number_input(f"Value for {feature}", value=default_val, format="%.4f")
+            
+        st.markdown("---")
+        if st.button("Predict Outcome", type="primary"):
+            try:
+                 input_df = pd.DataFrame([input_data])
+                 model = st.session_state['model_instance']
+                 pred = model.predict(input_df)
+                 
+                 problem = st.session_state['problem_type']
+                 
+                 if problem == 'Classification':
+                      result = pred[0]
+                      if st.session_state.get('target_encoder') is not None:
+                           result = st.session_state['target_encoder'].inverse_transform([result])[0]
+                      st.success(f"🩺 Prediction Result: **{result}**")
+                 else:
+                      st.success(f"📊 Prediction Result (Value): **{pred[0]:.4f}**")
+            except Exception as e:
+                 st.error(f"Prediction error: {e}")
+    else:
+        st.info("Train a model in Step 8 to enable predictions.")
         
 st.markdown("---")
 st.markdown("<p style='text-align: center; color: gray;'>Designed with ❤️ using Streamlit - Course CS-303B</p>", unsafe_allow_html=True)
