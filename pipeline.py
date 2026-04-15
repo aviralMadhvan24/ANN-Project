@@ -672,4 +672,3 @@ with tabs[9]:
         st.info("Train a model in Step 8 to enable predictions.")
         
 st.markdown("---")
-st.markdown("<p style='text-align: center; color: gray;'>Designed with ❤️ using Streamlit - Course CS-303B</p>", unsafe_allow_html=True)
